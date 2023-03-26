@@ -10,6 +10,7 @@ def sigmoid(x):
 class NeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size):
         # Initialize weights randomly
+        self.weights0 = -130000*np.random.randn(hidden_size)
         self.weights1 = np.random.randn(input_size, hidden_size)
         self.weights2 = np.random.randn(hidden_size, output_size)
         self.weights3 = 130000
@@ -17,17 +18,19 @@ class NeuralNetwork:
     
     def forward(self, X):
         # Propagate inputs through the network
-        self.hidden = sigmoid(np.dot(X, self.weights1))
+        self.hidden = sigmoid(np.dot(X, self.weights1)+self.weights0)
         self.output = sigmoid(np.dot(self.hidden, self.weights2))
         return self.output*self.weights3
     
     def backward(self, X, y, learning_rate):
         # Compute derivatives of the loss function
+        d_weights0 = 2*(y - self.output*self.weights3)*self.weights3*self.output*(1-self.output) * self.hidden*(1-self.hidden)
         d_weights1 = 2*(y - self.output*self.weights3)*self.weights3*self.output*(1-self.output) * np.tensordot(X, self.hidden*(1-self.hidden), axes=0 )
         d_weights2 = 2*(y - self.output*self.weights3) * self.weights3 * self.output*(1-self.output)*self.hidden
         d_weights3 = -2*(y-self.output*self.weights3)*self.output
         
         # Update weights
+        self.weights0 += learning_rate * d_weights0
         self.weights1 += learning_rate * d_weights1
         self.weights2 += learning_rate * d_weights2.reshape((self.hidden_size,1))
         self.weights3 += learning_rate * d_weights3
@@ -65,6 +68,7 @@ for i in range(1,20000,1):
     X = training_data[k:k+5]
     y = training_data[k+6]
     nn.train(X, y, 0.00002)
+print(nn.weights0)
 print(nn.weights1)
 print(nn.weights2)
 print(nn.weights3)
